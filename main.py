@@ -24,7 +24,6 @@ class WASP(QApplication):
         ]))
         
         # Set random organization name
-        # self.setOrganizationName("Microsoft")
         self.setOrganizationName(random.choice([
             "Microsoft",
             "Apple",

@@ -98,7 +98,7 @@ WASP simulates natural mouse activity and clicks to keep those tracking demons t
 
 **Boom!** You're now in control of your own time! 🎉
 
-### Alternative: standalone executable (Only for Windows)
+### Alternative: standalone executable (Only for)
 Use the **pre-built executable** if you don't want to install Python or just want to get up and running quickly.
 
 1.  **Download the latest release** from the [Releases](https://github.com/Deadpool2000/WASP/releases) page.
