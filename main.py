@@ -6,7 +6,7 @@ from gui.main_window import MainWindow
 from gui.styles import MAIN_STYLE
 import random
 
-class MouseMaticApp(QApplication):    
+class WASP(QApplication):    
     def __init__(self, argv):
         super().__init__(argv)
         
@@ -16,11 +16,33 @@ class MouseMaticApp(QApplication):
             "Display Settings",
             "Volume Control",
             "Network Diagnostics"
+            "Canva",
+            "Adobe Photoshop 2025",
+            "Adobe Acrobat Reader",
+            "Visual Studio Code",
+            "ChatGPT"
         ]))
         
         # Set random organization name
-        self.setOrganizationName("Microsoft")
-        self.setOrganizationDomain("microsoft.com")
+        # self.setOrganizationName("Microsoft")
+        self.setOrganizationName(random.choice([
+            "Microsoft",
+            "Apple",
+            "Google",
+            "Amazon",
+            "Adobe",
+            "Canva",
+            "OpenAI",
+        ]))
+        self.setOrganizationDomain(random.choice([
+            "microsoft.com",
+            "apple.com",
+            "google.com",
+            "amazon.com",
+            "adobe.com",
+            "canva.com",
+            "openai.com",
+        ]))
         
     def event(self, event):
         # Hide to tray on Escape key
@@ -33,7 +55,7 @@ class MouseMaticApp(QApplication):
         return super().event(event)
 
 def main():
-    app = MouseMaticApp(sys.argv)
+    app = WASP(sys.argv)
     app.setStyleSheet(MAIN_STYLE)
     
     # Set application icon
