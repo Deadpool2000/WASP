@@ -2,8 +2,10 @@ import random
 import time
 try:
     import pygetwindow as gw
-except ImportError:
+except (ImportError, NotImplementedError):
     gw = None
+import sys
+import subprocess
 from PyQt6.QtCore import QThread, pyqtSignal
 
 class WindowSwitcher(QThread):
@@ -42,13 +44,32 @@ class WindowSwitcher(QThread):
         if max_interval is not None:
             self.max_interval = max(self.min_interval + 10, max_interval)
         
+    def _get_windows_linux(self):
+        """Get list of windows on Linux using wmctrl"""
+        try:
+            # wmctrl -l lists windows: ID Desktop Host Title
+            output = subprocess.check_output(['wmctrl', '-l'], text=True)
+            windows = []
+            for line in output.splitlines():
+                parts = line.split(maxsplit=3)
+                if len(parts) > 3:
+                    windows.append(parts[3])
+            return windows
+        except (subprocess.SubprocessError, FileNotFoundError):
+            return []
+
     def get_all_windows(self):
         """Get list of all available windows"""
-        if gw is None:
+        if sys.platform.startswith('linux'):
+            all_windows = self._get_windows_linux()
+            if not all_windows and gw is None:
+                return []
+        elif gw is None:
             return []
         
         try:
-            all_windows = gw.getAllTitles()
+            if not sys.platform.startswith('linux'):
+                all_windows = gw.getAllTitles()
             # Filter out empty titles and system windows
             valid_windows = [w for w in all_windows 
                            if w and w.strip()]
@@ -75,10 +96,15 @@ class WindowSwitcher(QThread):
         try:
             # Select random window
             target_window = random.choice(windows)
-            window = gw.getWindowsWithTitle(target_window)[0]
             
-            # Activate the window
-            window.activate()
+            if sys.platform.startswith('linux'):
+                # Activate window on Linux
+                subprocess.run(['wmctrl', '-a', target_window])
+            else:
+                window = gw.getWindowsWithTitle(target_window)[0]
+                
+                # Activate the window
+                window.activate()
             
             self.switch_counter += 1
             self.window_switched.emit(target_window)  # Emit the window title
@@ -94,7 +120,7 @@ class WindowSwitcher(QThread):
         
     def run(self):
         """Main execution loop"""
-        if gw is None:
+        if gw is None and not sys.platform.startswith('linux'):
             self.status_update.emit("Error: pygetwindow not installed")
             return
             

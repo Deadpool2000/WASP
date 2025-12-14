@@ -78,6 +78,14 @@ WASP simulates natural mouse activity and clicks to keep those tracking demons t
 - Python 3.8+ (the language of rebellion)
 - A burning desire for work-life balance
 
+#### Linux Users 🐧
+You'll need a few extra tools to make the magic happen:
+```bash
+sudo apt-get install python3-tk python3-dev wmctrl
+```
+- `python3-tk`: Required for mouse control features
+- `wmctrl`: Required for the window switcher to work
+
 ### Installation
 
 1. **Clone Your Freedom**
