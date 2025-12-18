@@ -1,0 +1,157 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      tag_name: ${{ steps.tag_generator.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Generate Tag Name
+        id: tag_generator
+        run: |
+          git fetch --tags
+          
+          # Get the latest tag, default to v0.0.0 if none exists
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag found: $LATEST_TAG"
+          
+          # Remove 'v' prefix
+          VERSION=${LATEST_TAG#v}
+          
+          # Split version into array (assuming vX.Y.Z)
+          IFS='.' read -r -a parts <<< "$VERSION"
+          
+          # Calculate new version
+          if [ ${#parts[@]} -eq 3 ]; then
+            # Standard X.Y.Z format
+            MAJOR=${parts[0]}
+            MINOR=${parts[1]}
+            PATCH=${parts[2]}
+            NEW_PATCH=$((PATCH + 1))
+            NEW_TAG="v$MAJOR.$MINOR.$NEW_PATCH"
+          else
+             # Fail-safe / Initial formatting
+             NEW_TAG="v0.0.1"
+          fi
+          
+          echo "Generated new tag: $NEW_TAG"
+          echo "tag_name=$NEW_TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag_generator.outputs.tag_name }}
+          name: Release ${{ steps.tag_generator.outputs.tag_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    name: Build Executable
+    needs: create_release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Install Linux System Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
+
+      - name: Build with PyInstaller (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          pyinstaller --name WASP --onefile --windowed --add-data "core;core" --add-data "gui;gui" main.py
+          mv dist/WASP.exe dist/WASP-windows.exe
+
+      - name: Build with PyInstaller (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          pyinstaller --name WASP --onefile --windowed --add-data "core:core" --add-data "gui:gui" main.py
+          mv dist/WASP dist/WASP-linux
+
+      - name: Build with PyInstaller (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          pyinstaller --name WASP --onefile --windowed --add-data "core:core" --add-data "gui:gui" main.py
+          # Create DMG
+          hdiutil create dist/WASP.dmg -srcfolder dist/WASP.app -ov -format UDZO
+          mv dist/WASP.dmg dist/WASP-macos.dmg
+
+      - name: Move to Output Folder (Simulating "Store at output")
+        shell: bash
+        run: |
+          mkdir -p output
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            cp dist/WASP-windows.exe output/
+          elif [ "${{ runner.os }}" == "Linux" ]; then
+            cp dist/WASP-linux output/
+          elif [ "${{ runner.os }}" == "macOS" ]; then
+            cp dist/WASP-macos.dmg output/
+          fi
+
+      - name: Upload Release Asset (Windows)
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create_release.outputs.tag_name }}
+          files: output/WASP-windows.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset (Linux)
+        if: runner.os == 'Linux'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create_release.outputs.tag_name }}
+          files: output/WASP-linux
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset (macOS)
+        if: runner.os == 'macOS'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create_release.outputs.tag_name }}
+          files: output/WASP-macos.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: WASP-${{ matrix.os }}
+          path: output/*
