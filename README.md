@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/github/v/tag/Deadpool2000/WASP?label=version&color=blue)
 ![Python](https://img.shields.io/badge/python-3.8+-green)
 ![Status](https://img.shields.io/badge/status-always%20productive-brightgreen)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey)
