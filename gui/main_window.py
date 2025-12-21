@@ -10,6 +10,7 @@ from core.mouse_controller import MouseController
 from core.scheduler import Scheduler
 from core.hotkey_listener import HotkeyListener
 from core.window_switcher import WindowSwitcher
+from gui.about_tab import AboutTab
 
 class MainWindow(QMainWindow):
     """Main application window with compact layout"""
@@ -65,6 +66,7 @@ class MainWindow(QMainWindow):
         self.create_scheduler_tab()
         self.create_window_switcher_tab()
         self.create_status_tab()
+        self.create_about_tab()
         
         main_layout.addWidget(self.tab_widget)
         
@@ -132,6 +134,12 @@ class MainWindow(QMainWindow):
                 
                 tray_menu.addSeparator()
                 
+                about_action = QAction("About", self)
+                about_action.triggered.connect(self.show_about)
+                tray_menu.addAction(about_action)
+                
+                tray_menu.addSeparator()
+                
                 exit_action = QAction("Exit", self)
                 exit_action.triggered.connect(self.clean_exit)
                 tray_menu.addAction(exit_action)
@@ -166,6 +174,11 @@ class MainWindow(QMainWindow):
     def clean_exit(self):
         """Clean exit through tray"""
         self.close()
+        
+    def show_about(self):
+        """Show about tab"""
+        self.show_normal()
+        self.tab_widget.setCurrentWidget(self.about_tab)
         
     def create_header(self, layout):
         """Create header section"""
@@ -529,6 +542,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(status_group)
         
         self.tab_widget.addTab(status_tab, "📊 Status")
+        
+    def create_about_tab(self):
+        """Create about tab"""
+        self.about_tab = AboutTab()
+        self.tab_widget.addTab(self.about_tab, "ℹ️ About")
         
     def create_footer(self, layout):
         """Create footer with click counter"""
