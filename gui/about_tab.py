@@ -103,7 +103,14 @@ class AboutTab(QWidget):
             }
         """)
         try:
-            license_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "LICENSE")
+            # Check for PyInstaller temporary directory (sys._MEIPASS)
+            if hasattr(sys, '_MEIPASS'):
+                base_path = sys._MEIPASS
+            else:
+                base_path = os.path.dirname(os.path.dirname(__file__))
+
+            license_path = os.path.join(base_path, "LICENSE")
+            
             if os.path.exists(license_path):
                 with open(license_path, "r", encoding="utf-8") as f:
                     self.license_text.setText(f.read())

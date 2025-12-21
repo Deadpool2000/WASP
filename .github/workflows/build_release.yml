@@ -98,7 +98,10 @@ jobs:
         env:
           VERSION_TAG: ${{ needs.create_release.outputs.tag_name }}
         run: |
-          pyinstaller --name WASP --onefile --windowed --add-data "core;core" --add-data "gui;gui" main.py
+          # Create version file for dynamic versioning
+          echo "${{ env.VERSION_TAG }}" > core/version.txt
+          
+          pyinstaller --name WASP --onefile --windowed --add-data "core;core" --add-data "gui;gui" --add-data "LICENSE;." --add-data "core/version.txt;core" main.py
           mv dist/WASP.exe "dist/WASP-${{ env.VERSION_TAG }}-windows.exe"
 
       - name: Build with PyInstaller (Linux - Binary, Deb, AppImage)
@@ -106,8 +109,11 @@ jobs:
         env:
           VERSION_TAG: ${{ needs.create_release.outputs.tag_name }}
         run: |
+          # Create version file for dynamic versioning
+          echo "${{ env.VERSION_TAG }}" > core/version.txt
+          
           # 1. Build Base Binary
-          pyinstaller --name WASP --onefile --windowed --add-data "core:core" --add-data "gui:gui" --hidden-import "pynput.keyboard._xorg" --hidden-import "pynput.mouse._xorg" main.py
+          pyinstaller --name WASP --onefile --windowed --add-data "core:core" --add-data "gui:gui" --add-data "LICENSE:." --add-data "core/version.txt:core" --hidden-import "pynput.keyboard._xorg" --hidden-import "pynput.mouse._xorg" main.py
           # Rename binary
           cp dist/WASP "dist/WASP-${{ env.VERSION_TAG }}-linux"
           
@@ -162,7 +168,10 @@ jobs:
         env:
           VERSION_TAG: ${{ needs.create_release.outputs.tag_name }}
         run: |
-          pyinstaller --name WASP --onefile --windowed --add-data "core:core" --add-data "gui:gui" main.py
+          # Create version file for dynamic versioning
+          echo "${{ env.VERSION_TAG }}" > core/version.txt
+          
+          pyinstaller --name WASP --onefile --windowed --add-data "core:core" --add-data "gui:gui" --add-data "LICENSE:." --add-data "core/version.txt:core" main.py
           
           # 1. Zip the .app
           cd dist
