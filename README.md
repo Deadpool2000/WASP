@@ -263,6 +263,21 @@ The software thinks you're at your desk. You're at the coffee machine. Everyone 
 **Remember**: WASP is for reasonable breaks, not for gaming all day!
 
 ---
+## 🧠 The Science of "Human" Movement
+
+WASP doesn't just "jump" the mouse from point A to point B. That would be an instant red flag for tracking algorithms. Instead, we realized that human hand movement follows specific laws of physics.
+
+### The Algorithm
+We implemented a **Cubic Bezier Curve** algorithm with **Quadratic Ease-In-Out** acceleration.
+
+1.  **Curvature**: Real hands move in arcs, not straight lines. We calculate a random control point offset to create a natural curve for every movement.
+2.  **Acceleration**: Humans have mass. We take time to speed up and slow down. WASP mathematically simulates this inertia, starting slow, accelerating, and decelerating on arrival.
+3.  **Micro-Jitter**: We add imperceptible randomness to the path, just like the micro-tremors in a human hand.
+
+[**📚 Read the Full Mathematical Explanation**](docs/move_naturally_full_detailed_explanation.md)
+*Includes XY graphs, Bezier formulas, and acceleration calculus.*
+
+---
 
 ## 🤝 Legal Disclaimer
 

@@ -14,7 +14,6 @@ from gui.about_tab import AboutTab
 
 class MainWindow(QMainWindow):
     """Main application window with compact layout"""
-    
     def __init__(self, app=None):
         super().__init__()
         self.mouse_controller = MouseController()
