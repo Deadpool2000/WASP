@@ -11,6 +11,8 @@
 
 *Because your Boss/HR/Manager doesn't need to know you took a coffee break* ☕
 
+<a href="https://www.producthunt.com/products/wasp-2?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-w-a-s-p" target="_blank" rel="noopener noreferrer"><img alt="W.A.S.P. - Undetectable Open-Source Mouse Jiggler &amp; Activity Simulator | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1249383&amp;theme=light&amp;t=1789386191215"></a>
+
 ![Screenshot](https://github.com/user-attachments/assets/8e650aed-574e-4c25-ac5a-43ba76e764c6)
 
 </div>
