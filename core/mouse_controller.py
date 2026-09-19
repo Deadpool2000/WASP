@@ -20,6 +20,8 @@ class MouseController(QThread):
         self.max_click_interval = 5
         self.random_click = False
         self.click_count = 0
+        self.rest_enabled = False
+        self.rest_duration = 2.0
         
     def set_scroll_speed(self, speed):
         """Set the scrolling speed (0.1 to 5.0)"""
@@ -35,6 +37,25 @@ class MouseController(QThread):
         self.min_click_interval = max(1, min_interval)
         self.max_click_interval = max(self.min_click_interval, max_interval)
         self.random_click = True
+
+    def set_rest_enabled(self, enabled):
+        """Enable or disable rest between mouse movements."""
+        self.rest_enabled = enabled
+
+    def set_rest_duration(self, duration):
+        """Set rest duration between mouse movements in seconds."""
+        self.rest_duration = max(0.1, min(60.0, duration))
+
+    def _wait_between_movements(self):
+        """Wait before starting the next movement."""
+        rest_duration = (
+            self.rest_duration
+            if self.rest_enabled
+            else random.uniform(0.05, 0.15)
+        )
+        rest_end = time.monotonic() + rest_duration
+        while self.running and time.monotonic() < rest_end:
+            time.sleep(min(0.1, rest_end - time.monotonic()))
 
     def _bezier_point(self, t, start, c1, c2, end):
         """Calculate point on cubic Bezier curve"""
@@ -176,8 +197,8 @@ class MouseController(QThread):
                     scroll_amount = random.randint(-5, 5) * 10
                     pyautogui.scroll(scroll_amount)
                 
-                # Small delay between movements
-                time.sleep(random.uniform(0.05, 0.15))
+                # Rest before next movement
+                self._wait_between_movements()
                 
             except Exception as e:
                 self.status_update.emit(f"Error: {str(e)}")

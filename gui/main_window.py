@@ -9,6 +9,7 @@ import os
 from core.mouse_controller import MouseController
 from core.scheduler import Scheduler
 from core.hotkey_listener import HotkeyListener
+from core.input_stop_listener import InputStopListener
 from core.window_switcher import WindowSwitcher
 from gui.about_tab import AboutTab
 
@@ -19,6 +20,7 @@ class MainWindow(QMainWindow):
         self.mouse_controller = MouseController()
         self.scheduler = Scheduler()
         self.hotkey_listener = HotkeyListener()
+        self.input_stop_listener = InputStopListener()
         self.window_switcher = WindowSwitcher()
         self.is_active = False
         self.app = app
@@ -244,6 +246,13 @@ class MainWindow(QMainWindow):
         
         control_layout.addWidget(self.start_button, 0, 0)
         control_layout.addWidget(self.stop_button, 0, 1)
+
+        self.input_stop_checkbox = QCheckBox("Stop on mouse movement, click, or key press")
+        self.input_stop_checkbox.setToolTip(
+            "Stop activity when you move the mouse, click a mouse button, or press any key"
+        )
+        self.input_stop_checkbox.stateChanged.connect(self.toggle_input_stop)
+        control_layout.addWidget(self.input_stop_checkbox, 1, 0, 1, 2)
         
         # Speed control
         speed_label = QLabel("Speed:")
@@ -256,15 +265,29 @@ class MainWindow(QMainWindow):
         
 
         
-        control_layout.addWidget(speed_label, 1, 0)
-        control_layout.addWidget(self.speed_spinbox, 1, 1)
+        control_layout.addWidget(speed_label, 2, 0)
+        control_layout.addWidget(self.speed_spinbox, 2, 1)
+
+        self.rest_checkbox = QCheckBox("Rest between movements")
+        self.rest_checkbox.stateChanged.connect(self.toggle_rest)
+        self.rest_spinbox = QDoubleSpinBox()
+        self.rest_spinbox.setRange(0.1, 60.0)
+        self.rest_spinbox.setValue(2.0)
+        self.rest_spinbox.setSingleStep(0.5)
+        self.rest_spinbox.setSuffix(" sec")
+        self.rest_spinbox.setEnabled(False)
+        self.rest_spinbox.setToolTip("Pause duration before the next mouse movement")
+        self.rest_spinbox.valueChanged.connect(self.update_rest_duration)
+
+        control_layout.addWidget(self.rest_checkbox, 3, 0)
+        control_layout.addWidget(self.rest_spinbox, 3, 1)
         
         # Click interval settings
         self.random_click_checkbox = QCheckBox("Random Interval")
         self.random_click_checkbox.stateChanged.connect(self.toggle_random_click)
         
-        control_layout.addWidget(QLabel("Click Mode:"), 2, 0)
-        control_layout.addWidget(self.random_click_checkbox, 2, 1)
+        control_layout.addWidget(QLabel("Click Mode:"), 4, 0)
+        control_layout.addWidget(self.random_click_checkbox, 4, 1)
         
         # Fixed interval UI
         self.fixed_label = QLabel("Interval:")
@@ -274,8 +297,8 @@ class MainWindow(QMainWindow):
         self.fixed_spinbox.setSuffix(" sec")
         self.fixed_spinbox.valueChanged.connect(self.update_click_fixed)
         
-        control_layout.addWidget(self.fixed_label, 3, 0)
-        control_layout.addWidget(self.fixed_spinbox, 3, 1)
+        control_layout.addWidget(self.fixed_label, 5, 0)
+        control_layout.addWidget(self.fixed_spinbox, 5, 1)
         
         # Random interval UI (initially hidden)
         self.range_label = QLabel("Range (Min-Max):")
@@ -299,8 +322,8 @@ class MainWindow(QMainWindow):
         range_layout.addWidget(self.max_click_spinbox)
         
         # Add to grid but keep reference to hide/show
-        control_layout.addWidget(self.range_label, 3, 0)
-        control_layout.addLayout(range_layout, 3, 1)
+        control_layout.addWidget(self.range_label, 5, 0)
+        control_layout.addLayout(range_layout, 5, 1)
         
         # Initial state
         self.range_label.hide()
@@ -579,11 +602,15 @@ class MainWindow(QMainWindow):
         
         # Connect hotkey listener
         self.hotkey_listener.stop_triggered.connect(self.emergency_stop)
+        self.input_stop_listener.stop_triggered.connect(self.stop_on_user_input)
+        self.input_stop_listener.status_update.connect(self.update_status)
         
     def start_activity(self):
         """Start mouse activity"""
         if not self.is_active:
             self.is_active = True
+            self.input_stop_listener.set_activity_active(True)
+            self.input_stop_listener.ignore_for(0.25)
             self.mouse_controller.start()
             self.start_button.setEnabled(False)
             self.stop_button.setEnabled(True)
@@ -593,6 +620,7 @@ class MainWindow(QMainWindow):
         """Stop mouse activity"""
         if self.is_active:
             self.is_active = False
+            self.input_stop_listener.set_activity_active(False)
             self.mouse_controller.stop()
             self.start_button.setEnabled(True)
             self.stop_button.setEnabled(False)
@@ -603,11 +631,35 @@ class MainWindow(QMainWindow):
         if self.is_active:
             self.stop_activity()
             self.update_status("⚠️ Emergency stop - F9 pressed")
+
+    def stop_on_user_input(self):
+        """Stop activity after enabled user mouse or keyboard input."""
+        if self.input_stop_checkbox.isChecked() and self.is_active:
+            self.stop_activity()
+            self.update_status("⚠️ Activity stopped - user input detected")
+
+    def toggle_input_stop(self, state):
+        """Enable or disable stopping activity on user input."""
+        enabled = state == Qt.CheckState.Checked.value
+        if enabled:
+            self.input_stop_listener.ignore_for(0.25)
+            self.input_stop_listener.set_activity_active(self.is_active)
+        self.input_stop_listener.set_enabled(enabled)
             
     def update_speed(self, value):
         """Update scroll speed"""
         self.mouse_controller.set_scroll_speed(value)
-        
+
+    def toggle_rest(self, state):
+        """Enable or disable rest between mouse movements."""
+        enabled = state == Qt.CheckState.Checked.value
+        self.rest_spinbox.setEnabled(enabled)
+        self.mouse_controller.set_rest_enabled(enabled)
+
+    def update_rest_duration(self, value):
+        """Update rest duration between mouse movements."""
+        self.mouse_controller.set_rest_duration(value)
+
     def toggle_random_click(self, state):
         """Toggle between fixed and random click intervals"""
         is_random = state == Qt.CheckState.Checked.value
@@ -752,6 +804,8 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Handle window close event"""
         # Stop all components
+        self.input_stop_listener.set_activity_active(False)
+        self.input_stop_listener.stop()
         self.hotkey_listener.stop()
         
         if self.is_active:
