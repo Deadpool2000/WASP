@@ -60,6 +60,8 @@ WASP simulates natural mouse activity and clicks to keep those tracking demons t
 🎯 **Smart Movement** - Random patterns that look natural
 🖱️ **Random Click Intervals** - Variable click timing for realism (NEW!)
 ⌨️ **Keyboard Simulation** - Optional random keystrokes
+🛑 **Stop on User Input** - Optional stop when you move or click the mouse, or press a key
+⏸️ **Movement Rest** - Optional pause between mouse movements
 
 🪟 **Window Switcher** - Randomly switch between apps (NEW!)
 
@@ -124,8 +126,9 @@ Use the **pre-built executable** if you don't want to install Python or just wan
 1. **Start Being "Productive"**: Hit the Start button before your coffee break
 2. **Emergency Stop**: Press **F9** if someone walks by (or click Stop)
 3. **Fine-Tune Your "Work Ethic"**: Adjust speed and click intervals
-4. **Set Your Schedule**: Enable scheduler for automated "productivity"
-5. **Take Your Break**: You've earned it!
+4. **Add Movement Rest**: Enable the rest checkbox and choose pause duration
+5. **Set Your Schedule**: Enable scheduler for automated "productivity"
+6. **Take Your Break**: You've earned it!
 
 ### The F9 Panic Button 🚨
 
@@ -148,6 +151,12 @@ Perfect for when:
 - You just like pressing Escape
 
 **Note**: This hides the window to the tray but keeps WASP running! Use **F9** if you need to stop the movement violently.
+
+### Stop on User Input
+
+Enable **Stop on mouse movement, click, or key press** in the Control tab. WASP stops
+mouse activity when it detects your mouse movement, mouse click, or keyboard press.
+Disable the checkbox to keep activity running after user input.
 
 ### Scheduler: The "I Work Regular Hours" Feature
 
